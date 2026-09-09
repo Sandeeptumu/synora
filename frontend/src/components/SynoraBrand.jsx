@@ -1,6 +1,7 @@
 import { Sparkles } from 'lucide-react'
 
-const LOGO = new URL('./assets/logo/SynoraLogo.png', import.meta.url).href
+import LOGO from "../assets/logo/SynoraLogo.png";
+<img src={LOGO} alt="Synora" />
 
 export default function SynoraBrand({ size = 38, showWordmark = true, className }) {
   return (
