@@ -1,0 +1,16 @@
+plugins { id 'com.android.application' }
+android {
+ namespace 'com.synora.mobile'
+ compileSdk 36
+ defaultConfig {
+  applicationId 'com.synora.mobile'
+  minSdk 26
+  targetSdk 36
+  versionCode 1
+  versionName '1.0.0'
+  manifestPlaceholders = [launchUrl: providers.gradleProperty('synoraUrl').getOrElse('http://localhost:5173/')]
+ }
+ buildTypes { debug { applicationIdSuffix '.local'; resValue 'string', 'app_name', 'Synora Local' }; release { resValue 'string', 'app_name', 'Synora' } }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+dependencies { implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.3' }

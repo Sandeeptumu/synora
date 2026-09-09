@@ -1,0 +1,131 @@
+import api, { apiMessage, asList } from './client'
+
+/* ---------- auth ---------- */
+export const login = async (email, password) => {
+  const { data } = await api.post('/api/auth/login', { email, password })
+  return data
+}
+
+export const register = async (payload) => {
+  const { data } = await api.post('/api/auth/register', payload)
+  return data
+}
+
+export const health = async () => (await api.get('/api/health')).data
+
+/* ---------- cases ---------- */
+export const getCases = async () => {
+  const { data } = await api.get('/api/cases')
+  return asList(data)
+}
+
+export const getCase = async (caseNumber) => (await api.get(`/api/cases/${caseNumber}`)).data
+
+export const createCase = async (payload) => (await api.post('/api/cases', payload)).data
+
+export const assignCounselor = async (caseNumber, counselorId) =>
+  (await api.post(`/api/cases/${caseNumber}/assign`, { counselorId })).data
+
+export const updateCaseStatus = async (caseNumber, status) =>
+  (await api.patch(`/api/cases/${caseNumber}/status`, { status })).data
+
+export const getTimeline = async (caseNumber) => asList((await api.get(`/api/cases/${caseNumber}/timeline`)).data)
+
+export const getRisk = async (caseNumber, silent = false) =>
+  (await api.get(`/api/cases/${caseNumber}/risk${silent ? '?silent=true' : ''}`)).data
+
+export const getRiskHistory = async (caseNumber, days = 90) =>
+  asList((await api.get(`/api/cases/${caseNumber}/risk-history?days=${days}`)).data)
+
+export const getSignals = async (caseNumber) =>
+  (await api.get(`/api/cases/${caseNumber}/signals`)).data ?? {}
+
+export const getBaseline = async (caseNumber) =>
+  (await api.get(`/api/cases/${caseNumber}/baseline`)).data ?? null
+
+export const getExplainability = async (caseNumber) =>
+  (await api.get(`/api/cases/${caseNumber}/explainability`)).data ?? {}
+
+/* ---------- analysis ---------- */
+export const submitTextCheckIn = async (caseNumber, payload) =>
+  (await api.post(`/api/analysis/text?caseNumber=${encodeURIComponent(caseNumber)}`, payload)).data
+
+export const submitVoiceCheckIn = async (caseNumber, formData) =>
+  (await api.post(`/api/analysis/voice?caseNumber=${encodeURIComponent(caseNumber)}`, formData)).data
+
+/* ---------- alerts ---------- */
+export const getAlerts = async (params = '') => asList((await api.get(`/api/alerts${params ? `?${params}` : ''}`)).data)
+
+export const patchAlert = async (id, body) => (await api.patch(`/api/alerts/${id}`, body)).data
+
+/* ---------- support records ---------- */
+export const getInterventions = async (caseNumber) =>
+  asList((await api.get(`/api/cases/${caseNumber}/interventions`)).data)
+
+export const addIntervention = async (caseNumber, payload) =>
+  (await api.post(`/api/cases/${caseNumber}/interventions`, payload)).data
+
+export const getFollowUps = async (caseNumber) =>
+  asList((await api.get(`/api/cases/${caseNumber}/followups`)).data)
+
+export const createFollowUp = async (caseNumber, payload) =>
+  (await api.post(`/api/cases/${caseNumber}/followups`, payload)).data
+
+export const patchFollowUp = async (id, body) => (await api.patch(`/api/followups/${id}`, body)).data
+
+/* ---------- consents ---------- */
+export const getConsents = async () => asList((await api.get('/api/consents')).data)
+
+export const setConsent = async (modality, granted) =>
+  (await api.post('/api/consents', { modality, granted })).data
+
+/* ---------- resources ---------- */
+export const getResources = async (params = '') =>
+  asList((await api.get(`/api/resources${params ? `?${params}` : ''}`)).data)
+
+export const getRecommendedResources = async (caseNumber) =>
+  asList((await api.get(`/api/resources/recommended/${caseNumber}`)).data)
+
+/* ---------- victim self-view ---------- */
+export const getMyCasesWellness = async () =>
+  (await api.get('/api/me/wellness')).data ?? { cases: [] }
+
+/* ---------- users ---------- */
+export const getUsers = async (params = '') => asList((await api.get(`/api/users${params ? `?${params}` : ''}`)).data)
+
+export const patchUser = async (id, body) => (await api.patch(`/api/users/${id}`, body)).data
+
+/* ---------- reports ---------- */
+export const getReportsOverview = async (days = 30) =>
+  (await api.get(`/api/reports/overview?days=${days}`)).data ?? {}
+
+/* ---------- admin ---------- */
+export const getSystemHealth = async () => (await api.get('/api/admin/system-health')).data ?? {}
+
+export const getAdminConfig = async () =>
+  (await api.get('/api/admin/config')).data ?? { thresholds: {}, weights: {}, note: '' }
+
+export const getAuditLogs = async (params = '') => {
+  const data = (await api.get(`/api/admin/audit-logs${params ? `?${params}` : ''}`)).data ?? {}
+  return { ...data, content: asList(data) }
+}
+export const getOrganizations = async () => asList((await api.get('/api/admin/organizations')).data)
+
+export const patchMyLanguages = async (payload) => (await api.patch('/api/users/me/languages', payload)).data
+export const patchMySpecialisations = async (payload) => (await api.patch('/api/users/me/specialisations', payload)).data
+
+export const submitDailyCheckIn = async (payload) => (await api.post('/api/support/check-in', payload)).data
+export const getTodayCheckIn = async () => (await api.get('/api/support/check-in/today')).data
+export const getCheckInHistory = async () => asList((await api.get('/api/support/check-in/history')).data)
+export const getTriage = async () => (await api.get('/api/support/triage')).data
+export const sendChatMessage = async (text) => (await api.post('/api/support/chat/message', { text })).data
+export const getChatHistory = async () => asList((await api.get('/api/support/chat/history')).data)
+export const clearChatHistory = async () => (await api.post('/api/support/chat/clear')).data
+export const getExperts = async (limit = 6) => asList((await api.get(`/api/support/experts?limit=${limit}`)).data)
+
+export const requestSupportCase = async () => {
+  const { data } = await api.post('/api/cases', {})
+  return data
+}
+
+export { apiMessage }

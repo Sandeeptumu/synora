@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: synora-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/synora}
+    username: ${DATABASE_USERNAME:synora}
+    password: ${DATABASE_PASSWORD:synora}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: true
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: false
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 20MB
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  api-docs.enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    com.synora.backend: INFO
+    org.springframework.security: WARN
+
+synora:
+  jwt:
+    secret: ${JWT_SECRET:synora-dev-secret-change-me-in-production-0123456789abcdef}
+    expiration-hours: 24
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:4173,http://localhost:3000}
+  ai:
+    provider: ${AI_PROVIDER:auto}   # auto | ollama | demo
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      model: ${OLLAMA_MODEL:llama3.2}
+      timeout-ms: 4000
+  risk:
+    threshold-moderate: 0.30
+    threshold-high: 0.60
+    threshold-critical: 0.80
+    alert-threshold: 0.60
+    weight-text: 0.28
+    weight-voice: 0.20
+    weight-behavior: 0.16
+    weight-baseline: 0.14
+    weight-temporal: 0.10
+    weight-crossmodal: 0.12
+  alerts:
+    escalation-minutes: 30
+  baseline:
+    window-days: 90
+    min-history: 3
+  seed:
+    enabled: ${SYNORA_SEED_ENABLED:false}
+  firebase:
+    project-id: ${FIREBASE_PROJECT_ID:}
