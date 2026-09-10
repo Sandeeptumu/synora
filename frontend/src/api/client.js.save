@@ -9,48 +9,10 @@ import axios from 'axios'
 // Development request/error logging — never logs tokens, passwords or payload bodies.
 // (Interceptors below emit [Synora API] lines when running under `npm run dev`.)
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || '';
-
-console.log('=== Synora API URL ===');
-console.log(API_URL);
-
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 20000,
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('synora_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  if (import.meta.env.DEV) {
-    console.debug(`[Synora API] ${config.method?.toUpperCase()} ${config.url}`)
-  }
-  return config
 })
-
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    const status = err.response?.status
-    const method = err.config?.method?.toUpperCase()
-    const url = err.config?.url
-
-    if (import.meta.env.DEV && url) {
-      const msg = err.response?.data?.message || err.message
-      console.debug(`[Synora API ERROR] ${method} ${url}${status ? ` → ${status}` : ''} — ${msg}`)
-    }
-
-    if (status === 401 && !url?.startsWith('/api/auth/')) {
-      localStorage.removeItem('synora_token')
-      localStorage.removeItem('synora_user')
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login'
-      }
-    }
-    return Promise.reject(err)
-  },
-)
-
 /** Safely extract a human message from any API/network error shape. */
 export const apiMessage = (err) => {
   if (!err) return 'Something went wrong'
