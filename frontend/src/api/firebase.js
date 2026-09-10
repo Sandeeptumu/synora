@@ -7,6 +7,8 @@ const config = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || webDefaults.appId,
 }
 export const firebaseConfigured = Object.values(config).every(Boolean)
+console.log("Firebase config:", config);
+console.log("Configured:", firebaseConfigured);
 let ready
 export function firebaseClient() {
   if (!firebaseConfigured) return Promise.reject(new Error('Google and phone sign-in are not available yet. Please use email.'))
