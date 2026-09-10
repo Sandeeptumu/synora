@@ -10,7 +10,7 @@ export const login = async (email, password) => {
 export const getMyProfile = async () =>
   (await api.get('/api/users/me')).data
 
-
+export const getMyProfile = async () =>
 export const register = async (payload) => {
   const { data } = await api.post('/api/auth/register', payload)
   return data

@@ -12,7 +12,9 @@ import {
   getUsers,
   getMyProfile,
   apiMessage
-} from '../../api'from './dashboardModel'
+} from '../../api'
+
+import { activeCase, records } from './dashboardModel'
 
 // Each section owns its request state. An optional request never blanks the page.
 export function useDashboardSection(load, enabled = true) {
