@@ -4,7 +4,14 @@ import api, { apiMessage, asList } from './client'
 export const login = async (email, password) => {
   const { data } = await api.post('/api/auth/login', { email, password })
   return data
+
 }
+
+export const getMyProfile = async () =>
+  (await api.get('/api/users/me')).data
+
+export const getMyProfile = async () =>
+  (await api.get('/api/users/me')).data
 
 export const register = async (payload) => {
   const { data } = await api.post('/api/auth/register', payload)

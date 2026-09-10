@@ -1,18 +1,7 @@
-import {
-  getTodayCheckIn,
-  getCheckInHistory,
-  getChatHistory,
-  getTriage,
-  getExperts,
-  getMyCasesWellness,
-  getCases,
-  getFollowUps,
-  getTimeline,
-  getResources,
-  getUsers,
-  getMyProfile,
-  apiMessage
-} from '../../api'from './dashboardModel'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
+import { getTodayCheckIn, getCheckInHistory, getChatHistory, getTriage, getExperts, getMyCasesWellness, getCases, getFollowUps, getTimeline, getResources, getUsers, apiMessage } from '../../api'
+import { activeCase, records } from './dashboardModel'
 
 // Each section owns its request state. An optional request never blanks the page.
 export function useDashboardSection(load, enabled = true) {
@@ -39,12 +28,13 @@ export default function useDashboardData() {
   const chat = useDashboardSection(getChatHistory)
   const triage = useDashboardSection(getTriage)
   const experts = useDashboardSection(loadExperts)
-  const canViewUsers = ['ADMIN', 'CASE_OFFICER'].includes(user?.role)
+
+const canViewUsers = ['ADMIN', 'CASE_OFFICER'].includes(user?.role)
 
 const users = useDashboardSection(
-  () => canViewUsers ? getUsers() : getMyProfile()
+  () => canViewUsers ? getUsers() : Promise.resolve([]),
+  canViewUsers
 )
-
   const wellness = useDashboardSection(getMyCasesWellness)
   const cases = useDashboardSection(getCases)
   const resources = useDashboardSection(getResources)
