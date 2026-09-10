@@ -120,7 +120,10 @@ export const patchMyLanguages = async (payload) => (await api.patch('/api/users/
 export const patchMySpecialisations = async (payload) => (await api.patch('/api/users/me/specialisations', payload)).data
 
 export const submitDailyCheckIn = async (payload) => (await api.post('/api/support/check-in', payload)).data
-export const getTodayCheckIn = async () => (await api.get('/api/support/check-in/today')).data
+export const getTodayCheckIn = async () => {
+  const { data } = await api.get('/api/support/check-in/today')
+  return data?.today === false ? null : data ?? null
+}
 export const getCheckInHistory = async () => asList((await api.get('/api/support/check-in/history')).data)
 export const getTriage = async () => (await api.get('/api/support/triage')).data
 export const sendChatMessage = async (text) => (await api.post('/api/support/chat/message', { text })).data
@@ -129,7 +132,7 @@ export const clearChatHistory = async () => (await api.post('/api/support/chat/c
 export const getExperts = async (limit = 6) => asList((await api.get(`/api/support/experts?limit=${limit}`)).data)
 
 export const requestSupportCase = async () => {
-  const { data } = await api.post('/api/cases', {})
+  const { data } = await api.post('/api/me/case')
   return data
 }
 

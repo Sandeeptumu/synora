@@ -7,18 +7,30 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.synora.backend.exception.ApiException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Map;
 
 /** Only the Admin SDK may turn an untrusted client token into a verified identity. */
 @Service
 public class FirebaseIdentityVerifier {
     private final String projectId;
+    private final String serviceAccountBase64;
     private FirebaseAuth auth;
-    public FirebaseIdentityVerifier(@Value("${synora.firebase.project-id:}") String projectId) {
+    @Autowired
+    public FirebaseIdentityVerifier(
+            @Value("${synora.firebase.project-id:}") String projectId,
+            @Value("${synora.firebase.service-account-base64:}") String serviceAccountBase64) {
         this.projectId = projectId;
+        this.serviceAccountBase64 = serviceAccountBase64;
+    }
+
+    FirebaseIdentityVerifier(String projectId) {
+        this(projectId, "");
     }
     public boolean isConfigured() { return !projectId.isBlank(); }
 
@@ -34,8 +46,12 @@ public class FirebaseIdentityVerifier {
                         app = existing.get();
                         if (!projectId.equals(app.getOptions().getProjectId())) throw new IllegalArgumentException("Firebase project changed; restart backend");
                     } else {
+                        GoogleCredentials credentials = serviceAccountBase64.isBlank()
+                                ? GoogleCredentials.getApplicationDefault()
+                                : GoogleCredentials.fromStream(new ByteArrayInputStream(
+                                        Base64.getDecoder().decode(serviceAccountBase64.trim())));
                         var options = FirebaseOptions.builder().setProjectId(projectId)
-                                .setCredentials(GoogleCredentials.getApplicationDefault()).build();
+                                .setCredentials(credentials).build();
                         app = FirebaseApp.initializeApp(options, "synora-auth");
                     }
                     auth = FirebaseAuth.getInstance(app);

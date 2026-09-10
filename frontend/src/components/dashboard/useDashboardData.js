@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import {
   getTodayCheckIn,
   getCheckInHistory,
@@ -14,7 +16,7 @@ import {
   apiMessage
 } from '../../api'
 
-import { activeCase, records } from './dashboardModel'
+import { activeCase } from './dashboardModel'
 
 // Each section owns its request state. An optional request never blanks the page.
 export function useDashboardSection(load, enabled = true) {
@@ -43,9 +45,11 @@ export default function useDashboardData() {
   const experts = useDashboardSection(loadExperts)
   const canViewUsers = ['ADMIN', 'CASE_OFFICER'].includes(user?.role)
 
-const users = useDashboardSection(
-  () => canViewUsers ? getUsers() : getMyProfile()
-)
+  const loadProfile = useCallback(
+    () => canViewUsers ? getUsers() : getMyProfile(),
+    [canViewUsers],
+  )
+  const users = useDashboardSection(loadProfile)
 
   const wellness = useDashboardSection(getMyCasesWellness)
   const cases = useDashboardSection(getCases)

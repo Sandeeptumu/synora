@@ -34,7 +34,7 @@ class AuthSecurityTests {
     @Test void publicRegistrationCannotChooseStaffRole() {
         var service=mock(UserService.class);var tokens=mock(JwtService.class);
         var registered=user("VICTIM");
-        when(service.register(anyString(),anyString(),eq("VICTIM"),anyString(),isNull(),isNull(),isNull(),isNull(),isNull(),isNull())).thenReturn(registered);
+        when(service.register(anyString(),anyString(),eq("VICTIM"),anyString(),isNull(),isNull(),isNull(),eq(List.of()),isNull(),eq(List.of()))).thenReturn(registered);
         var controller=new AuthController(service,tokens,mock(AuditService.class),mock(StaffInvitationRepository.class));
         var result=controller.register(new AuthController.RegisterRequest("x@example.com","password123","ADMIN","Test Member","+919876543210","Org","Specialist"));
         assertEquals("VICTIM",result.role());
@@ -43,7 +43,7 @@ class AuthSecurityTests {
     @Test void roleIsOptionalForEmailRegistration() {
         var service=mock(UserService.class);
         var registered=user("VICTIM");
-        when(service.register(anyString(),anyString(),eq("VICTIM"),anyString(),isNull(),isNull(),isNull(),isNull(),isNull(),isNull())).thenReturn(registered);
+        when(service.register(anyString(),anyString(),eq("VICTIM"),anyString(),isNull(),isNull(),isNull(),eq(List.of()),isNull(),eq(List.of()))).thenReturn(registered);
         var controller=new AuthController(service,jwt(),mock(AuditService.class),mock(StaffInvitationRepository.class));
         assertNotNull(controller.register(new AuthController.RegisterRequest("x@example.com","password123",null,"Test Member",null,null,null)).token());
     }

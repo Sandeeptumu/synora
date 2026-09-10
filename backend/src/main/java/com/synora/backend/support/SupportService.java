@@ -132,8 +132,8 @@ public class SupportService {
     public List<Map<String, Object>> recommendExperts(UUID userId, int limit) {
         User u = userRepo.findById(userId).orElseThrow(() -> new IllegalStateException("User not found"));
         var triage = currentTriage(userId).orElseGet(() -> assess(userId));
-        List<String> userLanguages = u.getLanguageCodes();
-        List<String> userConcerns = triage.getConcernAreas();
+        List<String> userLanguages = u.getLanguageCodes() == null ? List.of() : u.getLanguageCodes();
+        List<String> userConcerns = triage.getConcernAreas() == null ? List.of() : triage.getConcernAreas();
         String preferredPrimary = u.getPrimaryLanguage();
 
         List<User> candidates = userRepo.findAll().stream()
@@ -192,7 +192,8 @@ public class SupportService {
             if (lower.contains("hurt") || lower.contains("harm") || lower.contains("self-harm") || lower.contains("end it")) out.add("self_harm_concern");
             if (lower.contains("emergency") || lower.contains("crisis") || lower.contains("immediate")) out.add("crisis_emergency_concern");
         }
-        return CONCERN_AREA_NAMES.retainAll(out) ? new ArrayList<>(out) : new ArrayList<>(out);
+        out.retainAll(CONCERN_AREA_NAMES);
+        return new ArrayList<>(out);
     }
 
     private String derivePrimaryConcern(CheckInRecord today, List<Map<String, Object>> conv) {
@@ -263,7 +264,7 @@ public class SupportService {
         if (expertLanguages != null && !expertLanguages.isEmpty()) {
             long langOverlap = expertLanguages.stream().filter(userLanguages::contains).count();
             score += langOverlap * 0.12;
-            if (expertLanguages.contains(preferredPrimary)) score += 0.1;
+            if (preferredPrimary != null && expertLanguages.contains(preferredPrimary)) score += 0.1;
         }
         // Risk suitability: higher risk -> prefer counselors with relevant specialisations
         if (riskLevel.equals("HIGH") || riskLevel.equals("CRITICAL")) {
@@ -289,11 +290,12 @@ public class SupportService {
         } else if (expert.getSpecialisation() != null && concerns.stream().anyMatch(c -> fuzzyMatch(expert.getSpecialisation(), c))) {
             reasons.add("Recommended based on your current concerns and language preferences.");
         }
-        if (expert.getLanguageCodes().contains(preferredPrimary)) {
+        List<String> expertLanguages = expert.getLanguageCodes();
+        if (preferredPrimary != null && expertLanguages != null && expertLanguages.contains(preferredPrimary)) {
             reasons.add("Speaks your preferred language \"" + preferredPrimary + "\".");
         }
         if (reasons.isEmpty()) {
-            reasons.add("Listed as a available support professional.");
+            reasons.add("Listed as an available support professional.");
         }
         return String.join(" ", reasons);
     }

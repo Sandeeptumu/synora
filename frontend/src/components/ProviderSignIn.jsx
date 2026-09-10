@@ -7,6 +7,7 @@ import { firebaseConfigured, firebaseClient, providerMessage } from '../api/fire
 export default function ProviderSignIn({ onSuccess, fullName = '', disabled = false, onBusy }) {
   const [client, setClient] = useState(null)
   const [available, setAvailable] = useState(null)
+  const [availabilityMessage, setAvailabilityMessage] = useState('')
   const [phoneMode, setPhoneMode] = useState(false)
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
@@ -20,10 +21,31 @@ export default function ProviderSignIn({ onSuccess, fullName = '', disabled = fa
   const alive = useRef(true)
   useEffect(() => {
     alive.current = true
-    if (!firebaseConfigured) { setAvailable(false); return }
-    Promise.all([firebaseClient(), api.get('/api/auth/providers')]).then(([c, res]) => {
-      if (alive.current) { setClient(c); setAvailable(res.data.firebase === true) }
-    }).catch(() => { if (alive.current) setAvailable(false) })
+    if (!firebaseConfigured) {
+      setAvailable(false)
+      setAvailabilityMessage('Firebase web settings are missing. Email sign-in is still available.')
+      return
+    }
+    firebaseClient().then(async c => {
+      if (alive.current) setClient(c)
+      const res = await api.get('/api/auth/providers')
+      if (!res.data || typeof res.data !== 'object') {
+        throw new Error('The API address returned a web page instead of the Synora backend.')
+      }
+      if (alive.current) {
+        const enabled = res.data.firebase === true
+        setAvailable(enabled)
+        setAvailabilityMessage(enabled ? '' : 'The backend is running without Firebase credentials. Email sign-in is still available.')
+      }
+    }).catch(e => {
+      if (!alive.current) return
+      setAvailable(false)
+      setAvailabilityMessage(
+        e?.response?.status
+          ? `The Synora backend could not confirm Google sign-in (${e.response.status}). Check its Firebase settings.`
+          : 'Cannot reach the Synora backend. Check the API address or start the backend, then reload this page.'
+      )
+    })
     return () => { alive.current = false; verifier.current?.clear(); verifier.current = null }
   }, [])
   useEffect(() => {
@@ -82,7 +104,7 @@ export default function ProviderSignIn({ onSuccess, fullName = '', disabled = fa
       <button className="btn provider-button" type="button" disabled={blocked} onClick={google}><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2.2H12v4.1h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.8 3-4.3 3-7.4Z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5a6 6 0 0 1-9-3.1H3.1v2.6A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.4 14a6 6 0 0 1 0-4V7.4H3.1a10 10 0 0 0 0 9.2Z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A9.7 9.7 0 0 0 12 2a10 10 0 0 0-8.9 5.4L6.4 10A6 6 0 0 1 12 6Z"/></svg>Google</button>
       <button className="btn provider-button" type="button" disabled={blocked} onClick={() => {setPhoneMode(v=>!v);setError('')}} aria-expanded={phoneMode}><Phone size={17}/>Phone number</button>
     </div>
-    {available === false && <p className="provider-status">Google and phone sign-in are not available yet. Please continue with email.</p>}
+    {available === false && <p className="provider-status" role="status">{availabilityMessage}</p>}
     {available === null && <p className="provider-status" role="status">Checking sign-in options…</p>}
     {busy && !phoneMode && <p className="provider-status" role="status"><Loader2 className="auth-spinner" size={14}/> Completing sign-in…</p>}
     <AnimatePresence initial={false}>{phoneMode && <motion.div className="phone-panel" initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={{opacity:0,height:0}}>

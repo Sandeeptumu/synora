@@ -72,3 +72,7 @@ synora:
     enabled: ${SYNORA_SEED_ENABLED:false}
   firebase:
     project-id: ${FIREBASE_PROJECT_ID:}
+    # Render cannot read a file from your Mac. Set this to the base64-encoded
+    # service-account JSON in the Render environment. Local development can
+    # continue to use GOOGLE_APPLICATION_CREDENTIALS.
+    service-account-base64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:}

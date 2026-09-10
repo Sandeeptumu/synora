@@ -7,14 +7,15 @@ const config = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || webDefaults.appId,
 }
 export const firebaseConfigured = Object.values(config).every(Boolean)
-console.log("Firebase config:", config);
-console.log("Configured:", firebaseConfigured);
 let ready
 export function firebaseClient() {
   if (!firebaseConfigured) return Promise.reject(new Error('Google and phone sign-in are not available yet. Please use email.'))
   if (!ready) ready = Promise.all([import('firebase/app'), import('firebase/auth')]).then(([app, sdk]) => {
-    const instance = app.getApps().find(a => a.name === 'synora-client') || app.initializeApp(config, 'synora-client')
-    const auth = sdk.initializeAuth(instance, { persistence: sdk.inMemoryPersistence, popupRedirectResolver: sdk.browserPopupRedirectResolver })
+    const existing = app.getApps().find(a => a.name === 'synora-client')
+    const instance = existing || app.initializeApp(config, 'synora-client')
+    const auth = existing
+      ? sdk.getAuth(instance)
+      : sdk.initializeAuth(instance, { persistence: sdk.inMemoryPersistence, popupRedirectResolver: sdk.browserPopupRedirectResolver })
     return { auth, sdk }
   }).catch(e => { ready = undefined; throw e })
   return ready
