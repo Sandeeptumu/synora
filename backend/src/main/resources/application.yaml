@@ -21,7 +21,9 @@ spring:
       max-request-size: 20MB
 
 server:
-  port: ${SERVER_PORT:8080}
+  # Render and most container hosts provide PORT; SERVER_PORT remains supported
+  # for local development and existing deployments.
+  port: ${PORT:${SERVER_PORT:8080}}
 
 springdoc:
   api-docs.enabled: false
