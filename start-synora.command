@@ -4,21 +4,20 @@ set -euo pipefail
 project_dir="${0:A:h}"
 backend_env="$project_dir/backend/.env.local"
 
-if [[ ! -f "$backend_env" ]]; then
-  echo "Missing backend/.env.local. Copy backend/.env.local.example and add your Firebase settings."
+if [[ -f "$backend_env" ]]; then
+  set -a
+  source "$backend_env"
+  set +a
+fi
+
+if [[ -z "${DATABASE_URL:-}" ]]; then
+  echo "Missing DATABASE_URL. Add it to backend/.env.local."
   exit 1
 fi
 
-set -a
-source "$backend_env"
-set +a
-
-if [[ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
-  echo "Firebase Admin key was not found at: $GOOGLE_APPLICATION_CREDENTIALS"
-  exit 1
-fi
-
-if ! docker compose -f "$project_dir/docker-compose.yml" ps --status running postgres | grep -q postgres; then
+# Start local Postgres only for the default local connection. Hosted databases
+# such as Neon are used directly and must not start an unused Docker service.
+if [[ "$DATABASE_URL" == *"localhost:5432/synora"* ]] && ! docker compose -f "$project_dir/docker-compose.yml" ps --status running postgres | grep -q postgres; then
   docker compose -f "$project_dir/docker-compose.yml" up -d postgres
 fi
 
